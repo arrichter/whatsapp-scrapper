@@ -10,14 +10,18 @@ from selenium.common.exceptions import TimeoutException
 import base64
 import time
 from datetime import datetime
+from pathlib import Path
 
+# Please provide driver location:
+# Can be downloaded here: https://chromedriver.chromium.org/
+driverLocation = Path(__file__).parent / "chromedrivers/mac"
 
 class Scraper:
     def __init__(self):
         chrome_options = Options()
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("user-data-dir=~/Library/Application Support/Google/Chrome/Default/Cookies")
-        self.driver = webdriver.Chrome(chrome_options=chrome_options)
+        self.driver = webdriver.Chrome(driverLocation)
         print("Opening Whatsapp Web Window")
         self.driver.get('https://web.whatsapp.com')
         print("Scan Your QR Codes and Press Enter (Press Enter if You're Already Logged In)")
@@ -53,17 +57,18 @@ class Scraper:
             media = self.driver.find_element_by_xpath(media_xpath)
             media.click()
             time.sleep(5)
-            check_boxes = self.driver.find_elements_by_class_name("_2Ry6_")
-            check_boxes[0].click()
+            thumbnail = self.driver.find_element_by_xpath("//div[@class=\"_1kTz2\"]/div/div[1]")	
+            thumbnail.click()
             time.sleep(2)
 
             print("==================Getting Images====================")
             while True:
                 try:
                     i = datetime.today().strftime('%Y_%m_%d_%H_%M_%S')
-                    image_xpath ='//img[@class="rN9sv _2-V0A _3FXB1"]'
+                    image_xpath ='//img[@class="_8Yseo _3W6yC _3Whw5"]'
                     image = WebDriverWait(self.driver,20).until(lambda driver: self.driver.find_element_by_xpath(image_xpath))
-                    image_src = image.get_attribute("src");
+                    image_src = image.get_attribute("src")
+                    image_name = image_src.rsplit('/',1)[1]  # Optional: If you want to merge saved html and pictures later on
                     result = self.driver.execute_async_script("""
                         var uri = arguments[0];
                         var callback = arguments[1];
@@ -83,12 +88,12 @@ class Scraper:
                         f.write(final_image)
                         print("Saving "+filename+", Go To The Next Image")
                     time.sleep(2)
-                    next_button = self.driver.find_element_by_xpath('//div[@class="KNt1E _2ucQa"]')
+                    next_button = self.driver.find_element_by_xpath('//div[@class="_2UGa7 djOrh _3y5oW"]')
                     next_button.click()
                     time.sleep(2)
                 except Exception as e:
                     try:
-                        next_button = self.driver.find_element_by_xpath('//div[@class="KNt1E _2ucQa"]')
+                        next_button = self.driver.find_element_by_xpath('//div[@class="_2UGa7 djOrh _3y5oW"]')
                         next_button.click()
                         time.sleep(2)
                     except Exception as err:
@@ -122,6 +127,3 @@ while True:
     elif menu == '2':
         scraper.quitDriver()
         break
-
-
-
